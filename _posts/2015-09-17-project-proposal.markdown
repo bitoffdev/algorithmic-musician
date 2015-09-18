@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Initial Project Proposal"
+title:  "Project Proposal"
 date:   2015-09-17 12:25:56
 ---
 
