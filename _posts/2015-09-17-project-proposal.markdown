@@ -53,7 +53,7 @@ if __name__ == "__main__":
         print("Plays a wave file.\n\nUsage: %s filename.wav" % sys.argv[0])
         sys.exit(-1)
     PlayWave(sys.argv[1])
-{{% endhighlight %}}
+{% endhighlight %}
 
 I also wrote a test function to convert the audio from Stero to Mono. This will make it easier to process the sounds.
 
@@ -63,4 +63,4 @@ def SteroToMono(data, samplewidth):
     for i in range(0, len(data), 2 * samplewidth):
         new_data += data[i:i+samplewidth]
     return new_data
-{{% endhighlight %}}
+{% endhighlight %}
