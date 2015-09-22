@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Project Deadlines"
-date:   2015-09-17 21:44:43
+date:   2015-09-21 21:44:43
 ---
 
 ## Deadline 1: Waveform Reader (Minor Deadline)
