@@ -37,12 +37,12 @@ date:   2015-09-17 21:44:43
 - Determine the key of the pieces
 - Transpose certain songs if necessary
 
-## Deadline 5: Music Generation (Third Quarter Deadline)
+## Deadline 6: Music Generation (Third Quarter Deadline)
 
 - Due March 24, 2016
 - Build new waveform files from the patterns found
 
-## Deadline 6: Interface (Fourth Quarter Deadline)
+## Deadline 7: Interface (Fourth Quarter Deadline)
 
 - Due May 20th, 2016 (Last day for seniors)
 - Build user-friendly inferface/use for the music generator
