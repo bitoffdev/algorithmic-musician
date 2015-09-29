@@ -1,5 +1,8 @@
 name: Algorithmic Musician
 description: Senior project for the procedural generation of music
+author:
+  name: Elliot
 markdown: redcarpet
-baseurl: '/algorithmic-musician'
-githuburl: https://github.com/elliospizzaman/algorithmic-musician/
+url: "http://ejmsoftware.github.io"
+baseurl: "/algorithmic-musician"
+repo_url: "https://github.com/elliospizzaman/algorithmic-musician"
