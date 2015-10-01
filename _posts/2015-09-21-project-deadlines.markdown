@@ -14,7 +14,7 @@ date:   2015-09-21 21:44:43
 - Convert 16 bit samples to 8 bit samples
 - Save .wav files
 
-## Deadline 2: Fourier Transform (First Quarter Dealine)
+## Deadline 2: Fourier Transform (First Quarter Deadline)
 
 - Due October 30th, 2015
 - Implement Fourier transforms
@@ -28,7 +28,7 @@ date:   2015-09-21 21:44:43
 ## Deadline 4: Pattern Recognition (Second Quarter Deadline)
 
 - Due January 15, 2016
-- Try to recognize bmps or musical structure
+- Try to recognize bpms or musical structure
 - Store all the data in structured format
 
 ## Deadline 5: Key Recognition
@@ -45,4 +45,4 @@ date:   2015-09-21 21:44:43
 ## Deadline 7: Interface (Fourth Quarter Deadline)
 
 - Due May 20th, 2016 (Last day for seniors)
-- Build user-friendly inferface/use for the music generator
+- Build user-friendly interface/use for the music generator
