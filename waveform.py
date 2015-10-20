@@ -11,8 +11,9 @@ class WaveForm(object):
         if self._channel_count==2 and c==1:
             new_samples = ''
             for i in range(0, len(self._samples), 2 * self._sample_width):
-                new_samples += self._samples[i:i+self._sample_width]
+                new_samples += self._samples[i+2:i+self._sample_width+2]
             self._samples = new_samples
+            self._channel_count = 1
     def get_sample_width(self):
         return self._sample_width
     def set_sample_width(self, w):
