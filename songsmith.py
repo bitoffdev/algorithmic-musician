@@ -1,5 +1,5 @@
 import pyaudio
-from numpy import linspace,sin,int16
+from numpy import linspace,sin,int16,concatenate
 
 # Amplitude must be in the closed interval [-32768, 32768] because that is the max a 2 byte int can store
 def note(freq, length=1, amp=1, rate=44100):
@@ -14,6 +14,9 @@ def note(freq, length=1, amp=1, rate=44100):
 # Create a chord from multiple notes
 def chord(*args):
      return sum(n//len(args) for n in args)
+     
+def phrase(*args):
+    return concatenate(args)
 
 # Test Case
 if __name__=="__main__":
@@ -23,13 +26,14 @@ if __name__=="__main__":
                     channels=1,
                     rate=44100,
                     output=True)
-    # create the tone
+    # create the tone of a C2 bowed bass
     notes = []
-    notes.append(note(68,4,amp=30000))
-    notes.append(note(100,4,amp=30000))
-    notes.append(note(130,4,amp=30000))
-    tone = chord(*notes)
-    stream.write(tone)
+    notes.append(note(68,1,amp=32000))
+    notes.append(note(100,1,amp=32000))
+    notes.append(note(130,1,amp=6000))
+    notes.append(note(260,1,amp=6000))
+    song = phrase(notes[2], notes[3], chord(*notes))
+    stream.write(song.tostring())
     # close the Pyaudio stream
     stream.stop_stream()
     stream.close()

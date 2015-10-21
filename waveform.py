@@ -19,7 +19,7 @@ class WaveForm(object):
     def set_sample_width(self, w):
         pass
     def get_sample_count(self):
-        return self._get_sample_count
+        return self._sample_count
     def get_samples(self):
         return self._samples
     def get_params(self):
