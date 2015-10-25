@@ -14,7 +14,7 @@ First, you have to know a few things about the equal-tempered chromatic scale:
 
 Knowing this, we can write this equation:
 
-![](tuner-0.png)
+![](/images/tuner-0.png)
 
 where:
 
@@ -24,9 +24,9 @@ where:
 
 This equation can be solved for n:
 
-![](tuner-1.png)
+![](/images/tuner-1.png)
 
-![](tuner-2.png)
+![](/images/tuner-2.png)
 
 Since we know that every time a note doubles the octave increases once,
 the integer part of n must be equal to the octave.
