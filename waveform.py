@@ -5,25 +5,27 @@ class WaveForm(object):
         self._sample_rate = s_rate
         self._samples = samples
         self._sample_count = len(samples)
-    def get_channel_count(self):
+    def getchannelcount(self):
         return self._channel_count
-    def set_channel_count(self, c):
+    def setchannelcount(self, c):
         if self._channel_count==2 and c==1:
             new_samples = ''
             for i in range(0, len(self._samples), 2 * self._sample_width):
                 new_samples += self._samples[i+2:i+self._sample_width+2]
             self._samples = new_samples
             self._channel_count = 1
-    def get_sample_width(self):
+    def getsamplewidth(self):
         return self._sample_width
-    def set_sample_width(self, w):
+    def setsamplewidth(self, w):
         pass
-    def get_sample_count(self):
+    def getsamplecount(self):
         return self._sample_count
-    def get_samples(self):
+    def getsamples(self):
         return self._samples
-    def get_params(self):
+    def getparams(self):
         return (self._channel_count, self._sample_width, self._sample_rate, self._sample_count, 'NONE', 'not compressed')
+
+# OLD API, will be removed
 
 def open_wave(filename):
     import wave
@@ -36,3 +38,21 @@ def write_wave(filename, wav):
     fh = wave.open(filename, 'wb')
     fh.setparams((wav.get_params()))
     fh.writeframes(wav.get_samples())
+    
+# NEW API
+    
+def from_string(samplestring, rate=44100, width=2, channels=1):
+    waveobj = WaveForm(channels, width, rate, samplestring)
+    return waveobj
+
+def from_file(filename):
+    import wave
+    fh = wave.open(filename, 'rb')
+    waveobj = WaveForm(fh.getnchannels(), fh.getsampwidth(), fh.getframerate(), fh.readframes(-1))
+    return waveobj
+
+def to_file(filename, waveobj):
+    import wave
+    fh = wave.open(filename, 'wb')
+    fh.setparams((waveobj.getparams()))
+    fh.writeframes(waveobj.getsamples())
