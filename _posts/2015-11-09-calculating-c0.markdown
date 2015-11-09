@@ -13,7 +13,7 @@ C0 = 16.35
 
 I originally set the frequency of the lowest octave C to 16.35 based on a chart online. Recently, I decided to make sure this constant was precise as possible. I decided to calculate it my self. Based on A4 having a frequency of 440 Hz, I created the following equation:
 
-[]({{ site.baseurl }}/images/c0-calculation.png)
+![]({{ site.baseurl }}/images/c0-calculation.png)
 
 From this, I used Wolfram Alpha to calculate C0.
 
