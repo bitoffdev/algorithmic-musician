@@ -2,15 +2,17 @@
 Copyright EJM Software 2015
 Test of the waveform module
 """
-# point the module search path to the parent directory
-from sys import path
-path.insert(0,'..')
-# import the modules to be tested
+from sys import argv
 import waveform
 
+if len(argv) == 1:
+    print "Use this test by passing the name of a wav file to the program."
+    print "Example:"
+    print "    $ python waveform-test.py SONG.wav"
+    exit()
 
 # LOAD A WAVEFORM FROM FILE
-wav = waveform.from_file('Bowed-Bass-C2.wav')
+wav = waveform.from_file(argv[1])
 originalsamplewidth = wav.getsamplewidth()
 originalchannelcount = wav.getchannelcount()
 originalsize = len(wav.getsamples())
@@ -21,7 +23,7 @@ originalsize = len(wav.getsamples())
 waveform.to_file('readertest.wav', wav)
 # check that the files are identical, ie. the data was read and processed properly
 import filecmp
-assert filecmp.cmp('Bowed-Bass-C2.wav', 'readertest.wav')
+assert filecmp.cmp(argv[1], 'readertest.wav')
 # delete the created test file
 from os import remove
 remove('readertest.wav')
@@ -34,7 +36,7 @@ wav.setchannelcount(1)
 assert len(wav.getsamples()) == originalsize / originalchannelcount
 
 
-# TEST TWO: CHANGING SAMPLE WIDTH
+# TEST THREE: CHANGING SAMPLE WIDTH
 # change the waveform sample width
 wav.setsamplewidth(1)
 # check that the sample data reflects the change

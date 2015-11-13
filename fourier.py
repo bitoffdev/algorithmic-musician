@@ -5,7 +5,13 @@ import math
 
 def dft(x):
     """Computes the discrete Fourier Transform of the 1D array x
-    Uses a scaling (normalization) factor of 1"""
+    Uses a scaling (normalization) factor of 1
+
+    Args:
+        x: Python array of amplitudes based on time
+
+    Returns:
+        Python array of amplitudes based on frequency"""
     TAU = 6.2831852 # tau is 2 * pi
     N = len(x) # number of samples we have
     amplitudes = [] # amplitudes
@@ -16,6 +22,10 @@ def dft(x):
             k_amp += x[n] * (math.cos(theta) + 1j * math.sin(theta))
         amplitudes.append(k_amp)
     return amplitudes
+
+def fft(x):
+    """Placeholder, this will be implemented soon"""
+    return dft(x)
 
 def freqs(n, d):
     """Computes that frequencies that correspond to the dft
