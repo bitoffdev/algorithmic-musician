@@ -10,6 +10,7 @@ import math # Used in tune function
 def freqtoname(f):
     # return empty string if input is not valid
     if f <= 0:
+        #print "F = ", f
         return ""
     # constant frequency of lowest C
     # based off an instrument tuned to A4 == 440 Hz
@@ -28,6 +29,9 @@ def freqtoname(f):
     return NOTE_NAMES[note] + str(octave)
 
 def nametofreq(name):
+    # if no name, return frequency of 0
+    if name=="":
+        return 0
     # constant frequency of lowest C
     # based off an instrument tuned to A4 == 440 Hz
     C0 = 16.3515978313
@@ -46,13 +50,14 @@ class Note (object):
         self.duration = _time
         self.amplitude = _amp
         self.rate = _rate
+        self.phase = 0 # Used by phrase to align notes, should be between 0 and 1
     def asarray(self):
         """returns numpy array"""
         TAU = 6.2831852 # tau is 2 * pi
         # Create numpy array length*rate long with the first value at 0 and the last at length
         t = linspace(0, self.duration, self.duration*self.rate)
         # Calculate the sine wave at the given frequency and multiply by amplitude
-        data = sin(TAU * self.frequency * t) * self.amplitude
+        data = sin(TAU * (self.frequency * t + self.phase)) * self.amplitude
         # convert the numpy array to 2 byte integers
         return data.astype(int16)
     def __str__(self):
@@ -70,8 +75,14 @@ class Chord (object):
 
 class Phrase (object):
     def __init__(self, *args):
-        self.notes = args
+        self.notes = []
     def asarray(self):
+        currentphase = 0.34
+        for chord in self.notes:
+            for note in chord.notes:
+                note.phase = currentphase
+            currentphase += chord.notes[0].frequency * chord.notes[0].duration
+
         return concatenate([n.asarray() for n in self.notes])
     def __str__(self):
         return self.asarray().tostring()
