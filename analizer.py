@@ -9,10 +9,10 @@ def time_plot(wav):
         wav: The waveform.WaveForm object to graph.
     """
     # make sure the channel count is 1
-    wav.set_channel_count(1)
+    wav.setchannelcount(1)
     # get the samples, dtype is signed integer for samples of width 2
     # See http://stackoverflow.com/a/2226907
-    samples = np.fromstring(wav.get_samples(), dtype='Int16')
+    samples = np.fromstring(wav.getsamples(), dtype='Int16')
     # plot the waveform using matplotlib
     plt.figure(1)
     plt.plot(samples)
@@ -83,15 +83,26 @@ def loudest_freqs(wav, start=0, stop=1024):
     # get the indices of the frequencies sorted by amplitude
     indices = sorted(range(len(amps)), key=lambda x:amps[x])
     # convert indices to notes
-    import tuner
+    import songsmith
     tuned_indices = []
     for i in indices[::-1]:
-        new = tuner.tune(freqs[i])
+        new = songsmith.freqtoname(freqs[i])
         if not (new in tuned_indices):
             tuned_indices.append(new)
-    #indices = map(tuner.tune, indices)
-    #return amps[:5]
     return [x for x in tuned_indices[:15]]
+    
+def getampforfreq(wav, start, stop, f):
+    # make sure the channel count is 1
+    wav.setchannelcount(1)
+    # get the samples, dtype is signed integer for samples of width 2
+    # See http://stackoverflow.com/a/2226907
+    samples = np.fromstring(wav.getsamples()[start:stop], dtype='Int16')
+    # perform a fast fourier transform
+    import fourier
+    amps = fourier.fft(samples.tolist())
+    amps = (np.array(amps) / len(samples)).tolist()
+    amp = abs(amps[int(f*len(samples)/wav.getsamplerate())].real)
+    return amp
 
 def loudest(samplestring):
     samples = np.fromstring(samplestring)
@@ -108,7 +119,7 @@ def loudest(samplestring):
     indices = sorted(range(len(amps)), key=lambda x:amps[x])
     #return amps[:5]
     return [freqs[x] for x in indices[-15:][::-1]]
-    
+
 # If we are running the script, analize the wav file that was passed in
 if __name__ == "__main__":
     from sys import argv
