@@ -66,24 +66,25 @@ class Note (object):
 
 # Create a chord from multiple notes
 class Chord (object):
-    def __init__(self, *args):
-        self.notes = args
+    def __init__(self, notes=None):
+        self.notes = notes
     def asarray(self):
-        return sum(n.asarray()//len(self.notes) for n in self.notes)
+        return sum(n.asarray() for n in self.notes)
+        #return sum(n.asarray()//len(self.notes) for n in self.notes)
     def __str__(self):
         return self.asarray().tostring()
 
 class Phrase (object):
-    def __init__(self, *args):
-        self.notes = []
+    def __init__(self, chords=None):
+        self.chords = chords or []
     def asarray(self):
         currentphase = 0.34
-        for chord in self.notes:
+        for chord in self.chords:
             for note in chord.notes:
                 note.phase = currentphase
             currentphase += chord.notes[0].frequency * chord.notes[0].duration
 
-        return concatenate([n.asarray() for n in self.notes])
+        return concatenate([n.asarray() for n in self.chords])
     def __str__(self):
         return self.asarray().tostring()
 
