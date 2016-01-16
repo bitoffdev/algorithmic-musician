@@ -5,10 +5,13 @@ import fourier
 import sys # For progress bar
 
 def BPM(x):
-    total_time = sum(x) # Total time
-    shortest_time = min(x)
-    beats = sum(time/shortest_time for time in x)
-    return total_time / int(beats)
+    shortest_note = min(x) # Get the duration of the shortest note
+    deviations = [note % shortest_note for note in x] # Find how much each note differs from the shortest_note
+    deviations = [(-shortest_note+deviation) if deviation > shortest_note/2 else deviation for deviation in deviations]
+    average_deviation = sum(deviations)/len(deviations)
+    average_note_time = shortest_note + average_deviation
+    return 60. / average_note_time # Convert the beat time to beats per minute
+
 
 def hcf(x, y, precision = 2):
     while(y>10**(-precision)):
@@ -179,8 +182,9 @@ def freq_plot(wav):
                 m_i = j
         #print "\n%s\n"%(large_sample_freqs[m_i])
         # Add the new values to the plot arrays
+        max_freqs.append(small_sample_freqs[small_freq_index])
         #max_freqs.append(large_sample_freqs[large_freq_index])
-        max_freqs.append(large_sample_freqs[m_i])
+        #max_freqs.append(large_sample_freqs[m_i])
         #max_freqs.append(large_sample_freqs[np.argmax(large_sample_matrix[i * conversion_factor-1])])
 
     # **************************************************************************
@@ -209,9 +213,8 @@ def freq_plot(wav):
     plt.plot(np.linspace(0, small_sample_count*small_sample_size/44100, len(max_freqs)), middle_bound, "g")
     plt.show()
     # **************************************************************************
-    # RECREATE THE SONG FROM THE PARSED DATA AND PLAY IT
+    # RECREATE THE SONG FROM THE PARSED DATA
     # **************************************************************************
-
     # Parse the data into song structure and
     # merge sequential chords that contain the same notes
     import songsmith
@@ -229,37 +232,12 @@ def freq_plot(wav):
                 song.chords[num].notes[n].duration += small_sample_size*1./44100
     for chord in song.chords:
         print [vars(note) for note in chord.notes]
-    #
-    #
-    #
-    # ave_bpm = hcf(song.chords[0].notes[0].duration, song.chords[1].notes[0].duration)
-    # for i in range(2, len(song.chords)):
-    #     ave_bpm = hcf(ave_bpm, song.chords[i].notes[0].duration)
-    # print 60. / ave_bpm, "bpms"
-    # bpm = 60. / ave_bpm
-    # adj_bpm = bpm
-    # i = 1
-    # while adj_bpm > 200:
-    #     adj_bpm = bpm / i
-    #     i += 1
-    # print "Adjusted BPM:", adj_bpm
-    # print "Beath length:", ave_bpm
     print "BPMs:", BPM([chord.notes[0].duration for chord in song.chords])
 
-    # for chunk in new_matrix:
-    #     indices = (chunk > 1000).nonzero()[0]
-    #     #print [small_sample_freqs[index] for index in indices]
-    #     if len(indices)==0:
-    #         # Add empty filler note
-    #         song.chords.append(songsmith.Chord(notes=[songsmith.Note(440, small_sample_size*1./44100, 0)]))
-    #     else:
-    #         # notes = [songsmith.Note(small_sample_freqs[indices[0]], small_sample_size*1./44100, 16000)]
-    #         notes = [songsmith.Note(small_sample_freqs[index], small_sample_size*1./44100, chunk[index]) for index in indices]
-    #         song.chords.append(songsmith.Chord(notes=notes))
-
-    # Play the song using pyaudio
+    # **************************************************************************
+    # PLAY THE RECREATED SONG
+    # **************************************************************************
     import pyaudio
-    #Open a pyaudio stream
     p = pyaudio.PyAudio()
     stream = p.open(format=p.get_format_from_width(2),
                     channels=1,
