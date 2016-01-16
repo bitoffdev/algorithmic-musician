@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Tone Recognition"
+title:  "Song Structure"
 date:   2015-01-15 23:23:52
 ---
 
