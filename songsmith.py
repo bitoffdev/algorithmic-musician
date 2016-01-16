@@ -1,12 +1,13 @@
 """
 This module is used to compose songs as sample strings for use in a wave file.
-Copyright EJM Software 2015
+Copyright EJM Software 2016
 """
 from numpy import linspace,sin,int16,concatenate
 import math # Used in tune function
 
 # ********************************************************************
 # HELPER FUNCTIONS
+# ********************************************************************
 def freqtoname(f):
     # return empty string if input is not valid
     if f <= 0:
@@ -43,6 +44,7 @@ def nametofreq(name):
 
 # ********************************************************************
 # SONG STRUCTURE
+# ********************************************************************
 # Amplitude must be in the closed interval [-32768, 32768] because that is the max a 2 byte int can store
 class Note (object):
     def __init__(self, _freq, _time, _amp, _rate=44100):
@@ -60,6 +62,13 @@ class Note (object):
         data = sin(TAU * (self.frequency * t + self.phase)) * self.amplitude
         # convert the numpy array to 2 byte integers
         return data.astype(int16)
+    def __eq__(self, other):
+        # Check if the notes are closer that half to the next note
+        # Basically, check if the other note is less than
+        # This note's frequency * (2^(1/12) + 1) / 2
+        # and greater than This note's frequency / (2^(1/12) + 1) / 2
+        ratio = 1.02973154718 # Ratio = (2^(1/12) + 1) / 2
+        return (other.frequency < self.frequency * ratio and other.frequency > self.frequency / ratio)
     def __str__(self):
         """returns string"""
         return self.asarray().tostring()
@@ -71,6 +80,8 @@ class Chord (object):
     def asarray(self):
         return sum(n.asarray() for n in self.notes)
         #return sum(n.asarray()//len(self.notes) for n in self.notes)
+    def __eq__(self, other):
+        return all(b==a for a in self.notes for b in other.notes)
     def __str__(self):
         return self.asarray().tostring()
 
@@ -91,6 +102,7 @@ class Phrase (object):
 
 # ********************************************************************
 # TEST CASE
+# ********************************************************************
 if __name__=="__main__":
     import pyaudio
     # Open a pyaudio stream

@@ -4,6 +4,17 @@ import numpy as np
 import fourier
 import sys # For progress bar
 
+def BPM(x):
+    total_time = sum(x) # Total time
+    shortest_time = min(x)
+    beats = sum(time/shortest_time for time in x)
+    return total_time / int(beats)
+
+def hcf(x, y, precision = 2):
+    while(y>10**(-precision)):
+        x, y = y, x % y
+    return round(x, precision)
+
 def triangular_smoothing(x, n=3):
     out = np.copy(x) * n
     for i in xrange(len(x)):
@@ -40,81 +51,87 @@ def freq_plot(wav):
     # See http://stackoverflow.com/a/2226907
     samples = np.fromstring(wav.getsamples(), dtype='Int16').tolist()
     # **************************************************************************
-    # ====================== SMALL CHUNK FFT ===================================
-    # PERFORM FFT ON EACH CHUNK
-    data = []
-    CHUNK_SIZE = 2**10
-    # Note: Frequency bucket size = frame_rate / sample_count
-    CHUNK_COUNT = len(samples)//CHUNK_SIZE
-    print "\n========= PARSING WAVE INPUT =====================";progress = 0 # PROGRESS BAR
-    for i in range(0, CHUNK_SIZE*CHUNK_COUNT, CHUNK_SIZE):
-        # perform a fast fourier transform
-        amps = fourier.fft(samples[i:i+CHUNK_SIZE])
-        amps = (np.array(amps) / CHUNK_SIZE).tolist()
-        # freqs = fourier.freqs(len(samples), 44100)
-        # use real part only
-        amps = [abs(x.real) for x in amps]
-        # Trim the freqs to only the range a human car hear
-        # a human can hear in the range 20 Hz to 20 kHz
-        # To put this in perspective, the lowest note on a piano is A0, which is 27.5 Hz
-        # The highest note on a piano is C8, which is 4186.01 Hz
-        start = int(20*CHUNK_SIZE//44100) + (20*CHUNK_SIZE%44100 > 0)
-        freqdomain = {"start": start,
-                      "end": int(5000*len(amps)/44100)
-                      }
-        amps = amps[freqdomain["start"]:freqdomain["end"]]
-        # freqs = freqs[freqdomain["start"]:freqdomain["end"]]
-        data.append(amps)
-
-        # PROGRESS BAR
-        current = i*50.0/(CHUNK_SIZE*CHUNK_COUNT)
-        if current > progress:
-            sys.stdout.write('.' * int(current - progress))
-            sys.stdout.flush()
-            progress = int(current)
-    print ".\n========= DONE ===================================" # PROGRESS BAR
-
-
-    # **************************************************************************
-    # LARGE CHUNK FFT
+    # SMALL SAMPLES FFT
     # **************************************************************************
     # PERFORM FFT ON EACH CHUNK
-    LARGE_CHUNK_SIZE = 2**14
-    large_chunk_count = len(samples)//LARGE_CHUNK_SIZE
-    large_chunk_freq_domain = {
-                    "start": int(20*LARGE_CHUNK_SIZE//44100) + (20*LARGE_CHUNK_SIZE%44100 > 0),
-                    "end": int(5000*LARGE_CHUNK_SIZE/44100)
+    small_sample_size = 2**10
+    small_sample_count = len(samples)//small_sample_size
+    small_freq_precision = 44100.0 / small_sample_size # frequency precision = sample rate / sample count
+    small_sample_freq_domain = {
+                    "start": 0,#int(20*small_sample_size//44100) + (20*small_sample_size%44100 > 0),
+                    "end": int(5000*small_sample_size/44100)
                     }
-    large_chunk_freqs = fourier.freqs(LARGE_CHUNK_SIZE, 44100)[large_chunk_freq_domain["start"]:large_chunk_freq_domain["end"]]
-    large_chunk_matrix = np.zeros((large_chunk_count, len(large_chunk_freqs)))
-    print "\n========= PARSING WAVE INPUT (LARGE)==============";progress = 0 # PROGRESS BAR
-    for i in range(0, LARGE_CHUNK_SIZE*large_chunk_count, LARGE_CHUNK_SIZE):
-        _amps = fourier.fft(samples[i:i+LARGE_CHUNK_SIZE])
-        _amps = [abs(x.real) for x in _amps] # use real part only
-        _amps = np.array(_amps) / LARGE_CHUNK_SIZE
-        _amps = _amps[large_chunk_freq_domain["start"]:large_chunk_freq_domain["end"]]
-        large_chunk_matrix[i/LARGE_CHUNK_SIZE] = _amps
-
+    small_sample_freqs = fourier.freqs(small_sample_size, 44100)[small_sample_freq_domain["start"]:small_sample_freq_domain["end"]]
+    small_sample_matrix = np.zeros((small_sample_count, len(small_sample_freqs)))
+    print "\n========= PARSING WAVE INPUT (SMALL)==============";progress = 0 # PROGRESS BAR
+    for i in range(0, small_sample_size*small_sample_count, small_sample_size):
+        amps = fourier.fft(samples[i:i+small_sample_size])
+        amps = (np.array(amps) / small_sample_size).tolist()
+        amps = [abs(x.real) for x in amps] # use real part only
+        amps = amps[small_sample_freq_domain["start"]:small_sample_freq_domain["end"]]
+        small_sample_matrix[i/small_sample_size] = amps
         # PROGRESS BAR
-        current = i*50.0/(LARGE_CHUNK_SIZE*large_chunk_count)
+        current = i*50.0/(small_sample_size*small_sample_count)
         if current > progress:
             sys.stdout.write('.' * int(current - progress))
             sys.stdout.flush()
             progress = int(current)
     print ".\n========= DONE ===================================" # PROGRESS BAR
 
-    # =================== ELLIOT'S SMOOTHING ALGORITHM ==========================
-    # Matrix is in the form:
-    # [chunk[amplitudes], chunk[amplitudes]]
+
+    # **************************************************************************
+    # LARGE SAMPLES FFT
+    # **************************************************************************
+    # PERFORM FFT ON EACH CHUNK
+    large_sample_size = 2**14
+    large_sample_count = len(samples)//large_sample_size
+    large_freq_precision = 44100.0 / large_sample_size # frequency precision = sample rate / sample count
+    large_sample_freq_domain = {
+                    "start": 0,#int(20*large_sample_size//44100) + (20*large_sample_size%44100 > 0),
+                    "end": int(5000*large_sample_size/44100)
+                    }
+    large_sample_freqs = fourier.freqs(large_sample_size, 44100)[large_sample_freq_domain["start"]:large_sample_freq_domain["end"]]
+    large_sample_matrix = np.zeros((large_sample_count, len(large_sample_freqs)))
+    print "\n========= PARSING WAVE INPUT (LARGE)==============";progress = 0 # PROGRESS BAR
+    for i in range(0, large_sample_size*large_sample_count, large_sample_size):
+        _amps = fourier.fft(samples[i:i+large_sample_size])
+        _amps = [abs(x.real) for x in _amps] # use real part only
+        _amps = np.array(_amps) / large_sample_size
+        _amps = _amps[large_sample_freq_domain["start"]:large_sample_freq_domain["end"]]
+        large_sample_matrix[i/large_sample_size] = _amps
+        # PROGRESS BAR
+        current = i*50.0/(large_sample_size*large_sample_count)
+        if current > progress:
+            sys.stdout.write('.' * int(current - progress))
+            sys.stdout.flush()
+            progress = int(current)
+    print ".\n========= DONE ===================================" # PROGRESS BAR
+
+
+
+
+    print "Small Freq Range:",
+    print small_sample_freqs[0],
+    print small_sample_freqs[len(small_sample_freqs)-1]
+    print "Large Freq Range:",
+    print large_sample_freqs[0],
+    print large_sample_freqs[len(large_sample_freqs)-1]
+
+
+
+    # **************************************************************************
+    # ELLIOT'S SMOOTHING ALGORITHM
+    # **************************************************************************
+    # Matrix is in the form: Matrix[sample index][frequency index] = amplitude
     print "\n========= SMOOTHING FFT OUTPUT ===================";progress = 0 # PROGRESS BAR
 
-    old_matrix = np.asarray(data)
+    old_matrix = small_sample_matrix
     new_matrix = np.zeros(shape=old_matrix.shape)
     for chunk_index in xrange(old_matrix.shape[1]):
         #new_matrix[:,chunk_index] = triangular_smoothing(old_matrix[:,chunk_index], 20)
-        #new_matrix[:,chunk_index] = moving_average(old_matrix[:,chunk_index], 20)
+        new_matrix[:,chunk_index] = moving_average(old_matrix[:,chunk_index], 20)
         #new_matrix[:,chunk_index] = remove_anomalies(moving_average(old_matrix[:,chunk_index], 20))
-        new_matrix[:,chunk_index] = remove_anomalies(old_matrix[:,chunk_index])
+        #new_matrix[:,chunk_index] = remove_anomalies(old_matrix[:,chunk_index])
         # PROGRESS BAR
         current = chunk_index*50.0/old_matrix.shape[1]
         if current > progress:
@@ -123,108 +140,122 @@ def freq_plot(wav):
             progress = int(current)
 
     print ".\n========= DONE ===================================" # PROGRESS BAR'''
-    # ===========================================================================
-    '''print "\n========= COMBINING SMALL AND LARGE ===============";progress = 0 # PROGRESS BAR
-    conversion_factor = CHUNK_SIZE * 1. / LARGE_CHUNK_SIZE
-    for i in xrange(len(new_matrix)):
+
+
+    # **************************************************************************
+    # USE THE DATA FROM THE LARGE SAMPLES TO MAKE THE SMALL SAMPLES MORE ACCURATE
+    # **************************************************************************
+    lower_bound = []
+    upper_bound = []
+    middle_bound = []
+    max_freqs = []#[freqs[np.argmax(chunk)] for chunk in new_matrix]
+    # factor * small_chunk_index = large_chunk_index
+    # factor * large_chunk_freq = small_chunk_freq
+    conversion_factor = small_sample_size * 1. / large_sample_size
+    # Iterate through the time chunks
+    for i in xrange(small_sample_count-16):
+        small_sample_index = i
+        large_sample_index = i * conversion_factor
+        # Find the index of the frequency in the stft matrix with small samples
         small_freq_index = np.argmax(new_matrix[i])
-        a_index = int((small_freq_index + 0.5) / conversion_factor)
+        large_freq_index = int(small_freq_index * 1. / conversion_factor)
+        large_freq_range_start = int((small_freq_index-1.) / conversion_factor)
+        large_freq_range_end = int((small_freq_index+1.) / conversion_factor)
+        lower_bound.append(large_sample_freqs[large_freq_range_start])
+        upper_bound.append(large_sample_freqs[large_freq_range_end])
+        middle_bound.append(small_sample_freqs[small_freq_index])
+        # Find the indices of frequencies in the stft matrix with large samples
+        a_index = int((small_freq_index - 0.5) / conversion_factor)
+        if a_index < 0: a_index = 0
         b_index = int((small_freq_index + 0.5) / conversion_factor)
-        m_amp = large_chunk_matrix[i * conversion_factor-1][a_index]
+        # Iterate through the possible frequencies of the large sampled matrix
+        m_amp = large_sample_matrix[large_sample_index][a_index]
         m_i = a_index
+        #print "Time: %.2f"%(large_sample_index*large_sample_size/44100)
         for j in range(a_index, b_index):
-            if large_chunk_matrix[i * conversion_factor][a_index] > m_amp:
-                m_amp = large_chunk_matrix[i * conversion_factor][a_index]
+            #print "(", large_sample_freqs[j], ",", large_sample_matrix[large_sample_index][j], ")",
+            if large_sample_matrix[large_sample_index][j] > m_amp:
+                m_amp = large_sample_matrix[large_sample_index][j]
                 m_i = j
-        new_matrix[i][small_freq_index] = large_chunk_freqs[m_i]
-        # PROGRESS BAR
-        current = i*50.0/len(new_matrix)
-        if current > progress:
-            sys.stdout.write('.' * int(current - progress))
-            sys.stdout.flush()
-            progress = int(current)
+        #print "\n%s\n"%(large_sample_freqs[m_i])
+        # Add the new values to the plot arrays
+        #max_freqs.append(large_sample_freqs[large_freq_index])
+        max_freqs.append(large_sample_freqs[m_i])
+        #max_freqs.append(large_sample_freqs[np.argmax(large_sample_matrix[i * conversion_factor-1])])
 
-    print ".\n========= DONE ===================================" # PROGRESS BAR'''
-    # =================== GRAPH THE DATA =======================================
-    start = int(20*CHUNK_SIZE//44100) + (20*CHUNK_SIZE%44100 > 0)
-    freqs = fourier.freqs(CHUNK_SIZE, 44100)[start:5000*CHUNK_SIZE/44100]
+    # **************************************************************************
+    # GRAPH THE DATA AS A SPECTROGRAM
+    # **************************************************************************
 
-    # Create a numpy matrix from data and swap the x and y axis
-    a = np.swapaxes(np.matrix(new_matrix), 0, 1)
+    #a = np.swapaxes(np.matrix(new_matrix), 0, 1) # Create a numpy matrix from data and swap the x and y axis
     # Create the plot of the data with the origin in the lower left hand corner.
-    # The extent argument specifies that the y values range from 0 to CHUNK_COUNT
+    # The extent argument specifies that the y values range from 0 to small_sample_count
     # and the x values range from 20 Hz to 5000 Hz
-    im = plt.imshow(a, origin='lower', extent=[0, CHUNK_COUNT*CHUNK_SIZE/44100, 20, 5000], interpolation='nearest')
+    #im = plt.imshow(a, origin='lower', extent=[0, small_sample_count*small_sample_size/44100, 20, 5000], interpolation='nearest')
+
+    a = np.swapaxes(large_sample_matrix, 0, 1) # Create a numpy matrix from data and swap the x and y axis
+    im = plt.imshow(a, origin='lower', extent=[0, large_sample_count*large_sample_size/44100, 0, 5000], interpolation='nearest')
     # Style the plot
     plt.xlabel("time (chunks)")
     plt.ylabel("frequency (hz)")
     plt.ylim(20, 5000)
     plt.axes().set_aspect('auto', 'datalim')
-    # show the plot
+
+    #max_amps = [chunk[np.argmax(chunk)] for chunk in new_matrix]
+    #max_freqs = [large_sample_freqs[np.argmax(chunk)] for chunk in large_sample_matrix]
+    plt.plot(np.linspace(0, small_sample_count*small_sample_size/44100, len(max_freqs)), max_freqs, "r")
+    plt.plot(np.linspace(0, small_sample_count*small_sample_size/44100, len(max_freqs)), lower_bound, "y")
+    plt.plot(np.linspace(0, small_sample_count*small_sample_size/44100, len(max_freqs)), upper_bound, "y")
+    plt.plot(np.linspace(0, small_sample_count*small_sample_size/44100, len(max_freqs)), middle_bound, "g")
     plt.show()
+    # **************************************************************************
+    # RECREATE THE SONG FROM THE PARSED DATA AND PLAY IT
+    # **************************************************************************
 
-    #'''
-
-    max_freqs = []#[freqs[np.argmax(chunk)] for chunk in new_matrix]
-
-    conversion_factor = CHUNK_SIZE * 1. / LARGE_CHUNK_SIZE
-    for i in xrange(len(new_matrix)):
-        small_freq_index = np.argmax(new_matrix[i])
-        # small_freq = freqs[np.argmax(chunk)]
-        # Find the range of frequencies from the small chunk stft
-        # a = small_freq - 44100 / CHUNK_SIZE
-        # b = small_freq + 44100 / CHUNK_SIZE
-        # Find the indices of frequencies from the large chunk stft
-        a_index = int((small_freq_index + 0.5) / conversion_factor)
-        b_index = int((small_freq_index + 0.5) / conversion_factor)
-        m_amp = large_chunk_matrix[i * conversion_factor-1][a_index]
-        m_i = a_index
-        for j in range(a_index, b_index):
-            if large_chunk_matrix[i * conversion_factor][a_index] > m_amp:
-                m_amp = large_chunk_matrix[i * conversion_factor][a_index]
-                m_i = j
-        max_freqs.append(large_chunk_freqs[m_i])
-
-
-
-
-    max_amps = [chunk[np.argmax(chunk)] for chunk in new_matrix]
-    plt.plot(np.linspace(0, CHUNK_COUNT*CHUNK_SIZE/44100, len(max_freqs)), max_freqs)
-    plt.show()
-    #'''
-    # ==========================================================================
-
-    # Parse the data into song structure
+    # Parse the data into song structure and
+    # merge sequential chords that contain the same notes
     import songsmith
     song = songsmith.Phrase() # Container for entire song data
 
-    # for i in range(len(max_freqs)):
-    #     song.chords.append(songsmith.Chord(notes=[songsmith.Note(max_freqs[i],CHUNK_SIZE*1./44100,16000)]))
-
-
-    for chunk in new_matrix:
-        indices = (chunk > 1000).nonzero()[0]
-        #print [freqs[index] for index in indices]
-        if len(indices)==0:
-            # Add empty filler note
-            song.chords.append(songsmith.Chord(notes=[songsmith.Note(440, CHUNK_SIZE*1./44100, 0)]))
+    for i in range(len(max_freqs)):
+        c = songsmith.Chord(
+            notes=[songsmith.Note(max_freqs[i],small_sample_size*1./44100,16000)]
+        )
+        if i==0 or not c==song.chords[len(song.chords)-1]:
+            song.chords.append(c)
         else:
-            # notes = [songsmith.Note(freqs[indices[0]], CHUNK_SIZE*1./44100, 16000)]
-            notes = [songsmith.Note(freqs[index], CHUNK_SIZE*1./44100, chunk[index]) for index in indices]
-            song.chords.append(songsmith.Chord(notes=notes))
+            num = len(song.chords)-1
+            for n in range(len(song.chords[num].notes)):
+                song.chords[num].notes[n].duration += small_sample_size*1./44100
+    for chord in song.chords:
+        print [vars(note) for note in chord.notes]
+    #
+    #
+    #
+    # ave_bpm = hcf(song.chords[0].notes[0].duration, song.chords[1].notes[0].duration)
+    # for i in range(2, len(song.chords)):
+    #     ave_bpm = hcf(ave_bpm, song.chords[i].notes[0].duration)
+    # print 60. / ave_bpm, "bpms"
+    # bpm = 60. / ave_bpm
+    # adj_bpm = bpm
+    # i = 1
+    # while adj_bpm > 200:
+    #     adj_bpm = bpm / i
+    #     i += 1
+    # print "Adjusted BPM:", adj_bpm
+    # print "Beath length:", ave_bpm
+    print "BPMs:", BPM([chord.notes[0].duration for chord in song.chords])
 
-    # ====== ====RESAMPLE THE NOTES =======================
-    # new_song = songsmith.Phase()
-    # for i in xrange(len(song.chords)):
-    #     for j in xrange(len(song.chords[i].notes)):
-    #         note_end = i
-    #         for k in xrange(i+1, len(song.chords)):
-    #             if abs(song.chords[i].notes[j].frequency - song.chords[i].notes[k].frequency) < 50:
-    #                 note_end += 1
-    #             else:
-    #                 break
-    #======================================================
-
+    # for chunk in new_matrix:
+    #     indices = (chunk > 1000).nonzero()[0]
+    #     #print [small_sample_freqs[index] for index in indices]
+    #     if len(indices)==0:
+    #         # Add empty filler note
+    #         song.chords.append(songsmith.Chord(notes=[songsmith.Note(440, small_sample_size*1./44100, 0)]))
+    #     else:
+    #         # notes = [songsmith.Note(small_sample_freqs[indices[0]], small_sample_size*1./44100, 16000)]
+    #         notes = [songsmith.Note(small_sample_freqs[index], small_sample_size*1./44100, chunk[index]) for index in indices]
+    #         song.chords.append(songsmith.Chord(notes=notes))
 
     # Play the song using pyaudio
     import pyaudio
@@ -240,8 +271,6 @@ def freq_plot(wav):
     stream.stop_stream()
     stream.close()
     p.terminate()
-
-
 
 
 
