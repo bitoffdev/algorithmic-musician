@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Song Structure"
-date:   2015-01-15 23:23:52
+date:   2016-01-15 23:23:52
 ---
 
 This post describes the work I have done to complete the second quarter deadline. The most recent changes can be seen in commit [3291d00](https://github.com/ejmsoftware/algorithmic-musician/commit/20c71ceb1478224a1f2b36c237a577f771f1de67). The two big pieces of this latest commit are improved song structure and approximate bpm calculation.
