@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Determining Key from Frequencies"
-date:   2016-01-03 11:56:36
+date:   2016-02-03 11:56:36
 ---
 
 ### Task
