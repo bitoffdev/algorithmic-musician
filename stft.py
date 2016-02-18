@@ -1,8 +1,13 @@
 """Module for analizing waveform audio files"""
+import songsmith
 import matplotlib.pyplot as plt
 import numpy as np
 import fourier
 import sys # For progress bar
+
+# ******************************************************************************
+# HELPER METHODS
+# ******************************************************************************
 
 def BPM(x):
     shortest_note = min(x) # Get the duration of the shortest note
@@ -17,6 +22,10 @@ def hcf(x, y, precision = 2):
     while(y>10**(-precision)):
         x, y = y, x % y
     return round(x, precision)
+
+# ******************************************************************************
+# SMOOTHING FUNCTIONS
+# ******************************************************************************
 
 def triangular_smoothing(x, n=3):
     out = np.copy(x) * n
@@ -41,6 +50,139 @@ def remove_anomalies(x):
         if abs(ave - x[i]) > 20:
             x[i] = ave
     return x
+
+# ******************************************************************************
+# STFT CLASS
+# ******************************************************************************
+
+class STFT_Matrix(object):
+    def __init__(self, samples, sample_rate=44100.0, c_size=1024):
+        # Time axis
+        self.chunk_size = c_size # Chunk size == frequency count
+        self.chunk_count = len(samples) // self.chunk_size
+        # Frequency axis
+        self.frequency_precision = sample_rate / self.chunk_size # The accuracy of the frequencies (e.g. How many Hz off are the freqs?)
+        self.frequency_cutoff = 5000 # Frequencies above this Hertz will be discarded
+        self.frequency_cutoff_index = int(self.frequency_cutoff*self.chunk_size/sample_rate)
+        self.frequencies = fourier.freqs(self.chunk_size, sample_rate)[:self.frequency_cutoff_index]
+        # Amplitude axis
+        self.amplitudes = np.zeros((self.chunk_count, len(self.frequencies))) # 2D array containing amp in terms of frequency at a time
+        print "\n========= PERFORMING STFT =========================";progress = 0 # PROGRESS BAR
+        for i in range(0, self.chunk_size*self.chunk_count, self.chunk_size):
+            amps = fourier.fft(samples[i:i+self.chunk_size])
+            amps = (np.array(amps) / self.chunk_size).tolist()
+            amps = [abs(x.real) for x in amps] # use real part only
+            amps = amps[:self.frequency_cutoff_index]
+            self.amplitudes[i/self.chunk_size] = amps
+            # PROGRESS BAR
+            current = i*50.0/(self.chunk_size*self.chunk_count)
+            if current > progress:
+                sys.stdout.write('.' * int(current - progress))
+                sys.stdout.flush()
+                progress = int(current)
+        print ".\n========= DONE ===================================" # PROGRESS BAR
+    def smooth_amps(self):
+        for time in range(self.chunk_count):
+            for freq in range(self.frequency_cutoff_index):
+                if self.amplitudes[time][freq] < 20:
+                    self.amplitudes[time][freq] = 0
+            frame_amp = sum(self.amplitudes[time])
+            if frame_amp!=0:
+                for freq in range(self.frequency_cutoff_index):
+                    self.amplitudes[time][freq] *= 2**15 / frame_amp / 2
+    def smooth_amps_2(self):
+        for time in range(self.chunk_count):
+            frame_max = max(self.amplitudes[time])
+            if frame_max!=0:
+                for freq in range(self.frequency_cutoff_index):
+                    self.amplitudes[time][freq] *= 2**15 / frame_max
+    def collapse_overtones(self):
+        for time in range(self.chunk_count):
+            for freq in range(self.frequency_cutoff_index):
+                if self.amplitudes[time][freq] > 40:
+                    for harmonic in range(2, 10):
+                        # Note that multiplying a freq index by x will also
+                        # multiply the frequency by x
+                        if len(self.amplitudes[time]) > freq*harmonic:
+                            value = min(self.amplitudes[time][freq*harmonic], self.amplitudes[time][freq] / harmonic)
+                            #value = self.amplitudes[time][freq*harmonic]
+                            self.amplitudes[time][freq*harmonic] -= value
+                            self.amplitudes[time][freq] += value
+    def spectrogram(self):
+        a = np.swapaxes(self.amplitudes, 0, 1) # Create a numpy matrix from data and swap the x and y axis
+        im = plt.imshow(a, origin='lower', extent=[0, self.chunk_count*self.chunk_size/44100.0, 0, self.frequency_cutoff], interpolation='nearest')
+        # Style the plot
+        plt.xlabel("time (seconds)")
+        plt.ylabel("frequency (hz)")
+        #plt.ylim(0, self.frequency_cutoff)
+        plt.axes().set_aspect('auto', 'datalim')
+        # Show the plot
+        plt.show()
+    def amp_graph(self):
+        amplitudes = [max(self.amplitudes[t]) for t in range(self.chunk_count)]
+        plt.plot(np.linspace(0, self.chunk_count*self.chunk_size/44100, len(amplitudes)), amplitudes, "r")
+        plt.xlabel("time (seconds)")
+        plt.ylabel("amplitude")
+        #plt.ylim(0, self.frequency_cutoff)
+        plt.show()
+    def to_song(self):
+        max_freqs = [self.frequencies[np.argmax(chunk)] for chunk in self.amplitudes]
+        # Container for entire song data
+        song = songsmith.Phrase()
+
+        for i in range(len(max_freqs)):
+            c = songsmith.Chord(
+                notes=[songsmith.Note(max_freqs[i],self.chunk_size*1./44100,16000)]
+            )
+            if i==0 or not c==song.chords[len(song.chords)-1]:
+                song.chords.append(c)
+            else:
+                num = len(song.chords)-1
+                for n in range(len(song.chords[num].notes)):
+                    song.chords[num].notes[n].duration += self.chunk_size*1./44100
+        return song
+
+
+class STFT(object):
+    def __init__(self, _waveform):
+        self.waveform = _waveform
+        # make sure the channel count is 1
+        self.waveform.setchannelcount(1)
+        # get the samples, dtype is signed integer for samples of width 2
+        # See http://stackoverflow.com/a/2226907
+        self.samples = np.fromstring(wav.getsamples(), dtype='Int16').tolist()
+    # def transform(self, chunk_size):
+    #     '''
+    #     chunk_size is the number of time frames per chunk.
+    #     '''
+    #     sample_rate = 44100.0
+    #
+    #     matrix = STFT_Matrix()
+    #     # Time axis
+    #     matrix.chunk_size = chunk_size
+    #     matrix.chunk_count = len(self.samples) // small_sample_size # Number of time chunks
+    #     # Frequency axis
+    #     matrix.frequency_precision = sample_rate / chunk_size # The accuracy of the frequencies (e.g. How many Hz off are the freqs?)
+    #     matrix.frequency_cutoff = 5000 # Frequencies above this Hertz will be discarded
+    #     matrix.frequency_cutoff_index = int(frequency_cutoff*chunk_size/sample_rate)
+    #     frequencies = fourier.freqs(chunk_size, sample_rate)[:frequency_cutoff_index]
+    #     matrix = np.zeros((count, len(frequencies)))
+    #     print "\n========= PARSING WAVE INPUT (SMALL)==============";progress = 0 # PROGRESS BAR
+    #     for i in range(0, chunk_size*chunk_count, chunk_size):
+    #         amps = fourier.fft(self.samples[i:i+chunk_size])
+    #         amps = (np.array(amps) / size).tolist()
+    #         amps = [abs(x.real) for x in amps] # use real part only
+    #         amps = amps[:frequency_cutoff_index]
+    #         small_sample_matrix[i/small_sample_size] = amps
+    #         # PROGRESS BAR
+    #         current = i*50.0/(small_sample_size*small_sample_count)
+    #         if current > progress:
+    #             sys.stdout.write('.' * int(current - progress))
+    #             sys.stdout.flush()
+    #             progress = int(current)
+    #     print ".\n========= DONE ===================================" # PROGRESS BAR
+
+
 
 def freq_plot(wav):
     """Graphs amplitude as a function of frequency
@@ -234,6 +376,16 @@ def freq_plot(wav):
         print [vars(note) for note in chord.notes]
     print "BPMs:", BPM([chord.notes[0].duration for chord in song.chords])
 
+
+    # ****************************IN DEVELOPMENT
+    note_names = []
+    for chord in song.chords:
+        for note in chord.notes:
+            note_names.append(note.frequency)
+    import keyfinder
+    print keyfinder.key(note_names)
+
+
     # **************************************************************************
     # PLAY THE RECREATED SONG
     # **************************************************************************
@@ -258,4 +410,17 @@ if __name__ == "__main__":
     if len(argv)>1:
         import waveform
         wav = waveform.open_wave(argv[1])
-        freq_plot(wav)
+        #freq_plot(wav)
+
+
+        wav.setchannelcount(1)
+        samples = np.fromstring(wav.getsamples(), dtype='Int16').tolist()
+        matrix = STFT_Matrix(samples, c_size=2**10)
+        matrix.amplitudes = triangular_smoothing(matrix.amplitudes)
+        matrix.smooth_amps_2()
+        print [amp for amp in matrix.amplitudes[5]]
+        print sum(matrix.amplitudes[5])
+        #matrix.amp_graph()
+        matrix.collapse_overtones()
+        #matrix.smooth_amps()
+        matrix.spectrogram()

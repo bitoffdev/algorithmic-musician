@@ -96,6 +96,19 @@ class Phrase (object):
             currentphase += chord.notes[0].frequency * chord.notes[0].duration
 
         return concatenate([n.asarray() for n in self.chords])
+    def play(self):
+        import pyaudio
+        p = pyaudio.PyAudio()
+        stream = p.open(format=p.get_format_from_width(2),
+                        channels=1,
+                        rate=44100,
+                        output=True)
+        song = self.__str__()
+        for i in xrange(0, len(song), 1024):
+            stream.write(song[i:i+1024])
+        stream.stop_stream()
+        stream.close()
+        p.terminate()
     def __str__(self):
         return self.asarray().tostring()
 
@@ -104,6 +117,7 @@ class Phrase (object):
 # TEST CASE
 # ********************************************************************
 if __name__=="__main__":
+    print "Running test..."
     import pyaudio
     # Open a pyaudio stream
     p = pyaudio.PyAudio()
