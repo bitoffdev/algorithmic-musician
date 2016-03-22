@@ -1,7 +1,7 @@
 import pyaudio, waveform
 from sys import argv
 
-def play(waveform, _start=None, _end=None, _speed=None):
+def play(wav, _start=None, _end=None, _speed=None):
     # Get the samples from the waveform object
     samples = wav.getsamples()
     # Check the input
@@ -22,8 +22,9 @@ def play(waveform, _start=None, _end=None, _speed=None):
     stream.close()
     p.terminate()
 
-if len(argv) == 1:
-    print "usage: python waveform-player.py filename [start] [end] [speed]"
-else:
-    wav = waveform.open_wave(argv[1])
-    play(wav, argv[2] if len(argv)>2 else None, argv[3] if len(argv)>3 else None, argv[4] if len(argv)>4 else None)
+if __name__=="__main__":
+    if len(argv) == 1:
+        print "usage: python waveform-player.py filename [start] [end] [speed]"
+    else:
+        wav = waveform.open_wave(argv[1])
+        play(wav, argv[2] if len(argv)>2 else None, argv[3] if len(argv)>3 else None, argv[4] if len(argv)>4 else None)

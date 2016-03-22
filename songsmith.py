@@ -2,8 +2,10 @@
 This module is used to compose songs as sample strings for use in a wave file.
 Copyright EJM Software 2016
 """
-from numpy import linspace,sin,int16,concatenate
+from numpy import linspace,sin,int16,concatenate, fromfunction
 import math # Used in tune function
+
+import sys
 
 # ********************************************************************
 # HELPER FUNCTIONS
@@ -41,11 +43,18 @@ def nametofreq(name):
     # calculate the frequency
     return C0 * 2 ** (float(name[-1]) + NOTE_NAMES.index(name[:-1])/12.0)
 
+def overtone(fundamental, n, B=0.00075145):
+    """ Returns the nth partial of the fundamental frequency
+    See: http://daffy.uah.edu/piano/page4/page8/index.html
+    """
+    return n * fundamental * (1 + 0.5 * (n*n-1) * B)
+
 
 # ********************************************************************
 # SONG STRUCTURE
 # ********************************************************************
 # Amplitude must be in the closed interval [-32768, 32768] because that is the max a 2 byte int can store
+
 class Note (object):
     def __init__(self, _freq, _time, _amp, _rate=44100):
         self.frequency = _freq
@@ -58,8 +67,18 @@ class Note (object):
         TAU = 6.2831852 # tau is 2 * pi
         # Create numpy array length*rate long with the first value at 0 and the last at length
         t = linspace(0, self.duration, self.duration*self.rate)
+
+        # DECAY
+        COUNT = self.duration * self.rate
+        #decay = linspace(0.6, 0.1, self.duration*self.rate)
+        #decay = 1 - linspace(0,COUNT-1, COUNT) / COUNT
+        indices = linspace(0,COUNT-1, COUNT)
+        decay = -1*((indices/COUNT-1)**4 + indices/COUNT - 1)
+
         # Calculate the sine wave at the given frequency and multiply by amplitude
-        data = sin(TAU * (self.frequency * t + self.phase)) * self.amplitude
+        data = sin(TAU * (self.frequency * t + self.phase)) * self.amplitude * decay
+
+        #print data.shape
         # convert the numpy array to 2 byte integers
         return data.astype(int16)
     def __eq__(self, other):
@@ -68,7 +87,7 @@ class Note (object):
         # This note's frequency * (2^(1/12) + 1) / 2
         # and greater than This note's frequency / (2^(1/12) + 1) / 2
         ratio = 1.02973154718 # Ratio = (2^(1/12) + 1) / 2
-        return (other.frequency < self.frequency * ratio and other.frequency > self.frequency / ratio)
+        return (other.frequency <= self.frequency * ratio and other.frequency >= self.frequency / ratio)
     def __str__(self):
         """returns string"""
         return self.asarray().tostring()
@@ -77,6 +96,12 @@ class Note (object):
 class Chord (object):
     def __init__(self, notes=None):
         self.notes = notes
+    def addovertones(self, count):
+        overtones = []
+        for note in self.notes:
+            for i in range(count):
+                overtones.append(Note(overtone(note.frequency, i + 2), note.duration, note.amplitude/(i+2)))
+        self.notes.extend(overtones)
     def asarray(self):
         return sum(n.asarray() for n in self.notes)
         #return sum(n.asarray()//len(self.notes) for n in self.notes)
