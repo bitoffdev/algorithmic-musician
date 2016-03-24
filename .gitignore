@@ -1,5 +1,8 @@
 # Ignore mac desktop files
 .DS_Store
 
-#Ignore compiled python files
+# Ignore compiled python files
 *.pyc
+
+# Ignore waveform files
+*.wav
