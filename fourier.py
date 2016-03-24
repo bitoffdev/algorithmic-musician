@@ -24,8 +24,10 @@ def dft(x):
     return amplitudes
 
 def fft(x):
-    """Placeholder, this will be implemented soon"""
-    return dft(x)
+    """Placeholder: this may be implemented by me.
+    For now, numpy has a fast implementation that I will use."""
+    import numpy as np
+    return np.fft.fft(np.array(x)).tolist()
 
 def freqs(n, d):
     """Computes that frequencies that correspond to the dft
