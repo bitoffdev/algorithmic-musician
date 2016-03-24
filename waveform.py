@@ -71,8 +71,10 @@ def from_string(samplestring, rate=44100, width=2, channels=1):
 
 def from_file(filename):
     import wave
+    print "Opening wavefile:", filename
     fh = wave.open(filename, 'rb')
     waveobj = WaveForm(fh.getnchannels(), fh.getsampwidth(), fh.getframerate(), fh.readframes(-1))
+    print "Done"
     return waveobj
 
 def to_file(filename, waveobj):
