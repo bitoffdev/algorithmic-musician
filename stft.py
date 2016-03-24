@@ -126,7 +126,7 @@ class STFT_Matrix(object):
                     self.amplitudes[time][freq] = 0
                 elif self.amplitudes[time][freq] > max:
                     self.amplitudes[time][freq] = max
-                     
+
     def spectrogram(self):
         a = np.swapaxes(self.amplitudes, 0, 1) # Create a numpy matrix from data and swap the x and y axis
         im = plt.imshow(a, origin='lower', extent=[0, self.chunk_count*self.chunk_size/44100.0, 0, self.frequency_cutoff], interpolation='nearest')
@@ -148,7 +148,7 @@ class STFT_Matrix(object):
         # max_freqs = [self.frequencies[np.argmax(chunk)] for chunk in self.amplitudes]
         # # Container for entire song data
         song = songsmith.Phrase()
-        # 
+        #
         # for i in range(len(max_freqs)):
         #     c = songsmith.Chord(
         #         notes=[songsmith.Note(max_freqs[i],self.chunk_size*1./44100,16000)]
@@ -160,7 +160,7 @@ class STFT_Matrix(object):
         #         for n in range(len(song.chords[num].notes)):
         #             song.chords[num].notes[n].duration += self.chunk_size*1./44100
         # return song
-        
+
         for t in range(len(self.amplitudes)):
             # Create chord
             c = songsmith.Chord(notes=[])
@@ -181,8 +181,8 @@ class STFT_Matrix(object):
                 for n in range(len(song.chords[num].notes)):
                     song.chords[num].notes[n].duration += self.chunk_size*1./44100
         return song
-                    
-                    
+
+
 
 
 def freq_plot(wav):
@@ -428,8 +428,7 @@ if __name__ == "__main__":
         #matrix.filter_blips()
         #matrix.smooth_amps()
         #matrix.amp_graph()
-        matrix.filter(25000)
+        matrix.filter(31000)
         matrix.spectrogram()
         # for chord in matrix.to_song().chords:
         #             print [vars(note) for note in chord.notes], "\n"
-        
