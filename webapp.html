@@ -1,0 +1,90 @@
+<html>
+  <head>
+    <title>WAV Generator</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <style>
+    body{
+      padding:10px;
+    }
+    form{
+      display:inline-block;
+    }
+    .fileUpload {
+      position: relative;
+      overflow: hidden;
+    }
+    .fileUpload input.upload {
+      position: absolute;
+      top: 0;
+      right: 0;
+      margin: 0;
+      padding: 0;
+      font-size: 20px;
+      cursor: pointer;
+      opacity: 0;
+      filter: alpha(opacity=0);
+    }
+    </style>
+  </head>
+<body>
+
+
+<form id="fileUploadForm" enctype="multipart/form-data" method="post">
+  <div class="btn-group">
+    <button class="fileUpload btn btn-primary">
+      Upload
+      <input type="file" class="upload" name="file" id="fileInput" onchange="updateFiles();" multiple/>
+    </button>
+    <button class="btn btn-primary" onclick="generateFile();">Generate</button>
+    <button class="btn btn-primary" id="playpause">Play</button>
+  </div>
+  <span class="label label-info" id="fileInfo"></span>
+</form>
+
+
+
+<div id="waveform"></div>
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/1.0.52/wavesurfer.min.js"></script>
+<script>
+var wavesurfer = WaveSurfer.create({
+    container: '#waveform',
+    waveColor: 'violet',
+    progressColor: 'purple'
+});
+</script>
+
+
+<script src="https://code.jquery.com/jquery-2.2.3.min.js"   integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="   crossorigin="anonymous"></script>
+<script>
+  function updateFiles(){
+    var f = document.getElementById("fileInput");
+    if (f.files==undefined){
+      document.getElementById("fileInfo").innerHTML = "";
+    } else {
+      document.getElementById("fileInfo").innerHTML = f.files[0].name;
+    }
+  }
+
+  function generateFile(){
+    var form = $('#fileUploadForm')[0];
+    var formData = new FormData(form);
+    $.ajax({
+      url: 'generate.html',
+      type: 'POST',
+      data: formData,
+      contentType: false,
+      processData: false
+    }).done(function(result){
+      wavesurfer.load("data:audio/x-wav;base64," + result);
+    });
+  }
+
+  $("#playpause").bind('click', function(){
+    wavesurfer.playPause();
+  });
+</script>
+
+</body>
+</html>

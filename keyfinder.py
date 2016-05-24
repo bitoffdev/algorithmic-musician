@@ -1,12 +1,9 @@
-# ******************************************************************************
-# Copyright EJM Software 2016
-# http://ejmsoftware.com
-# ******************************************************************************
+"""
+keyfinder.py - A module for determining the key of a musical composition
+Copyright EJM Software 2016
+"""
 from math import log
 
-# ******************************************************************************
-# CONSTANTS
-# ******************************************************************************
 # list containing the names of all the possible key tonic notes
 NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 # represents the intervals in a major scale
@@ -20,6 +17,10 @@ OCTAVE_MAXIMUM = OCTAVE_MINIMUM*2.
 # METHODS
 # ******************************************************************************
 def key(F):
+    """returns a string from the `NOTE_NAMES` representing the key of the music
+
+    F -- an array containing all the frequencies in the music being analyzed
+    """
     # STEP ONE - adjust all the frequecies to be in the octave we chose for tuning
     for n in range(0, len(F)):
         while F[n] >= OCTAVE_MAXIMUM:
@@ -40,12 +41,3 @@ def key(F):
 
     # STEP THREE
     return NOTE_NAMES[scores.index(max(scores))]
-
-# ******************************************************************************
-# TEST CASE
-# ******************************************************************************
-if __name__=="__main__":
-    assert(key([261.6, 293.7, 329.6, 349.2, 392.0, 440.0, 493.9])=="C")
-    assert(key([277.2, 311.1, 349.2, 370.0, 415.3, 466.2, 523.3, 554.4])=="C#")
-    assert(key([293.7, 329.6, 370.0, 392.0, 440.0, 493.9, 554.4, 587.3])=="D")
-    print "Tests succeded!"

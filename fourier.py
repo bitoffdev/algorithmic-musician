@@ -1,5 +1,6 @@
 """
-Copyright EJM Software 2015
+fourier.py - Runs the fourier transform
+Copyright EJM Software 2016
 """
 import math
 

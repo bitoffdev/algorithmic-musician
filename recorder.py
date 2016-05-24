@@ -1,3 +1,11 @@
+"""
+recorder.py - A module for recording waveform files
+Copyright EJM Software 2016
+
+Usage: python recorder.py FILENAME [LENGTH]
+    FILENAME -- the path to write the new file to
+    LENGTH -- the duration in seconds of the recording (default is 5)
+"""
 import pyaudio, waveform, sys
 
 FORMAT = pyaudio.paInt16
@@ -31,4 +39,4 @@ if __name__=="__main__":
         t = float(sys.argv[2]) if len(sys.argv) > 2 else 5
         record(t, sys.argv[1])
     else:
-        print "usage: python recorder.py filename [length]"
+        print __doc__

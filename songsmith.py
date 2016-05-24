@@ -1,19 +1,22 @@
 """
-This module is used to compose songs as sample strings for use in a wave file.
+songsmith.py - A module for constucting a 16-bit audio waveform from an
+intuitive musical structue.
 Copyright EJM Software 2016
 """
 from numpy import linspace,sin,int16,concatenate, fromfunction
-import math # Used in tune function
-
-import sys
+import sys, math
 
 # ********************************************************************
 # HELPER FUNCTIONS
 # ********************************************************************
 def freqtoname(f):
+    """ Returns the letter name of the note followed by its octave number
+    If the input is not valid, an empty string is returned
+
+    f -- a float representing the frequency of the note
+    """
     # return empty string if input is not valid
     if f <= 0:
-        #print "F = ", f
         return ""
     # constant frequency of lowest C
     # based off an instrument tuned to A4 == 440 Hz
@@ -32,6 +35,11 @@ def freqtoname(f):
     return NOTE_NAMES[note] + str(octave)
 
 def nametofreq(name):
+    """Returns a float representing the frequency of a given note name
+
+    name -- a string representation of a note starting with the letter of the
+    note followed by the octave number
+    """
     # if no name, return frequency of 0
     if name=="":
         return 0
@@ -45,9 +53,38 @@ def nametofreq(name):
 
 def overtone(fundamental, n, B=0.00075145):
     """ Returns the nth partial of the fundamental frequency
+    When n==1, the function returns the fundamental frequency
     See: http://daffy.uah.edu/piano/page4/page8/index.html
+
+    fundamental -- a float that represents the fundamental frequency
+    n -- which partial to return
     """
     return n * fundamental * (1 + 0.5 * (n*n-1) * B)
+
+def linear_adsr(frame_count):
+    """ Returns a numpy array decay function for a note
+    Affects the timbre of a note
+
+    frame_count -- the length of the returned decay array
+    """
+    peak = 0.75
+    rate = 44100
+    a_count = int(frame_count*0.1)
+    d_count = int(frame_count*0.1)
+    r_count = int(frame_count*0.2)
+    s_count = frame_count - a_count - d_count - r_count
+    a = linspace(0, peak, a_count)
+    d = linspace(peak, peak*0.5, d_count)
+    s = linspace(peak*0.5, peak*0.4, s_count)
+    r = linspace(peak*0.4, 0, r_count)
+    return concatenate((a,d,s,r))
+
+def compare_freqs(f1, f2):
+    """compares 2 frequencies to see if they are within the same note name"""
+    ratio = 1.02930223664 # Ratio = 2^(1/24)
+    return (f2 < f1 * ratio and f2 > f1 / ratio)
+
+
 
 
 # ********************************************************************
@@ -71,9 +108,13 @@ class Note (object):
         # DECAY
         COUNT = self.duration * self.rate
         #decay = linspace(0.6, 0.1, self.duration*self.rate)
-        #decay = 1 - linspace(0,COUNT-1, COUNT) / COUNT
-        indices = linspace(0,COUNT-1, COUNT)
-        decay = -1*((indices/COUNT-1)**4 + indices/COUNT - 1)
+        decay = 1 - linspace(0,COUNT-1, COUNT) / COUNT
+
+        decay = linear_adsr(COUNT)
+
+
+        #indices = linspace(0,COUNT-1, COUNT)
+        #decay = -1*((indices/COUNT-1)**4 + indices/COUNT - 1)
 
         # Calculate the sine wave at the given frequency and multiply by amplitude
         data = sin(TAU * (self.frequency * t + self.phase)) * self.amplitude * decay
@@ -113,6 +154,9 @@ class Chord (object):
 class Phrase (object):
     def __init__(self, chords=None):
         self.chords = chords or []
+    def addovertones(self, count):
+        for i in range(len(self.chords)):
+            self.chords[i].addovertones(count)
     def asarray(self):
         currentphase = 0.34
         for chord in self.chords:
@@ -134,6 +178,9 @@ class Phrase (object):
         stream.stop_stream()
         stream.close()
         p.terminate()
+    def debug(self):
+        for chord in self.chords:
+            print [vars(note) for note in chord.notes]
     def __str__(self):
         return self.asarray().tostring()
 
