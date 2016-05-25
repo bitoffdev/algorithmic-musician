@@ -183,25 +183,3 @@ class Phrase (object):
             print [vars(note) for note in chord.notes]
     def __str__(self):
         return self.asarray().tostring()
-
-
-# ********************************************************************
-# TEST CASE
-# ********************************************************************
-if __name__=="__main__":
-    print "Running test..."
-    import pyaudio
-    # Open a pyaudio stream
-    p = pyaudio.PyAudio()
-    stream = p.open(format=p.get_format_from_width(2),
-                    channels=1,
-                    rate=44100,
-                    output=True)
-    # create the tone of a C2 bowed bass
-    chord = Chord(Note(68,1,32000), Note(100,1,32000), Note(130,1,6000))
-    #song = phrase(chord(*notes))
-    stream.write(str(chord))
-    # close the Pyaudio stream
-    stream.stop_stream()
-    stream.close()
-    p.terminate()

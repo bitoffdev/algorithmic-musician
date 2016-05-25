@@ -3,57 +3,88 @@
     <title>WAV Generator</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
     <style>
-    body{
-      padding:10px;
-    }
-    form{
-      display:inline-block;
-    }
-    .fileUpload {
-      position: relative;
-      overflow: hidden;
-    }
-    .fileUpload input.upload {
-      position: absolute;
-      top: 0;
-      right: 0;
-      margin: 0;
-      padding: 0;
-      font-size: 20px;
-      cursor: pointer;
-      opacity: 0;
-      filter: alpha(opacity=0);
-    }
+      body{
+        padding:10px;
+      }
+      p, h1, h4 {
+        text-align: center;
+      }
+      .control-toolbar{
+        width:220;
+        margin: 5px auto;
+      }
+      .control-toolbar form{
+        display:inline-block;
+      }
+      .control-toolbar div {
+        padding: 5px 5px;
+      }
+      .fileUpload {
+        position: relative;
+        overflow: hidden;
+      }
+      .fileUpload input.upload {
+        position: absolute;
+        top: 0;
+        right: 0;
+        margin: 0;
+        padding: 0;
+        font-size: 20px;
+        cursor: pointer;
+        opacity: 0;
+        filter: alpha(opacity=0);
+      }
+      #message-panel{
+        display:none;
+        max-width: 400px;
+        margin: 0px auto;
+      }
     </style>
   </head>
-<body>
+
+  <body>
+    <!-- Header -->
+    <h1>Algorithmic Musician</h1>
+    <h4>Procedural Music Generator By EJM Software</h4>
+    <p>Upload a file that has the ".wav" extension, then click "generate."</p>
+
+    <!-- Control Toolbar -->
+    <div class="control-toolbar">
+      <div class="btn-group">
+        <button class="fileUpload btn btn-primary">
+          Upload
+          <form id="fileUploadForm" enctype="multipart/form-data" method="post">
+            <input type="file" class="upload" name="file" id="fileInput" onchange="updateFiles();"/>
+          </form>
+        </button>
+        <button class="btn btn-primary" onclick="generateFile();">Generate</button>
+        <button class="btn btn-primary" id="playpause">Play</button>
+      </div>
+      <div>
+        <span class="label label-info" id="fileInfo"></span>
+      </div>
+    </div>
 
 
-<form id="fileUploadForm" enctype="multipart/form-data" method="post">
-  <div class="btn-group">
-    <button class="fileUpload btn btn-primary">
-      Upload
-      <input type="file" class="upload" name="file" id="fileInput" onchange="updateFiles();" multiple/>
-    </button>
-    <button class="btn btn-primary" onclick="generateFile();">Generate</button>
-    <button class="btn btn-primary" id="playpause">Play</button>
-  </div>
-  <span class="label label-info" id="fileInfo"></span>
-</form>
+    <!-- Messages -->
+    <div class="panel panel-info" id="message-panel">
+      <div class="panel-body">
+        Please Wait. The output is being generated. This can take several minutes for large files.
+      </div>
+    </div>
 
+    <!-- Waveform visualization -->
+    <div id="waveform"></div>
 
-
-<div id="waveform"></div>
-
-
-<script src="//cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/1.0.52/wavesurfer.min.js"></script>
-<script>
-var wavesurfer = WaveSurfer.create({
-    container: '#waveform',
-    waveColor: 'violet',
-    progressColor: 'purple'
-});
-</script>
+    <!-- Load scripts after HTML body -->
+    <script src="//cdnjs.cloudflare.com/ajax/libs/wavesurfer.js/1.0.52/wavesurfer.min.js"></script>
+    <script>
+      var wavesurfer = WaveSurfer.create({
+          container: '#waveform',
+          waveColor: 'violet',
+          progressColor: 'purple'
+      });
+    </script>
 
 
 <script src="https://code.jquery.com/jquery-2.2.3.min.js"   integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="   crossorigin="anonymous"></script>
@@ -63,11 +94,16 @@ var wavesurfer = WaveSurfer.create({
     if (f.files==undefined){
       document.getElementById("fileInfo").innerHTML = "";
     } else {
-      document.getElementById("fileInfo").innerHTML = f.files[0].name;
+      var filesString = "";
+      for (var i=0;i<f.files.length;i++){
+        document.getElementById("fileInfo").innerHTML += f.files[i].name + "  ";
+      }
     }
   }
 
   function generateFile(){
+    document.getElementById("message-panel").style.display = "block";
+
     var form = $('#fileUploadForm')[0];
     var formData = new FormData(form);
     $.ajax({
@@ -78,6 +114,7 @@ var wavesurfer = WaveSurfer.create({
       processData: false
     }).done(function(result){
       wavesurfer.load("data:audio/x-wav;base64," + result);
+      document.getElementById("message-panel").style.display = "none";
     });
   }
 

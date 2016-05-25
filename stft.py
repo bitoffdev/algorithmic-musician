@@ -111,9 +111,6 @@ class STFT_Matrix(object):
         self.frequency_cutoff_index = frequency_bins-1
         self.frequency_cutoff = frequencies[frequency_bins-1]
 
-        print len(self.frequencies), frequency_bin_size
-
-
     def filter_blips(self, threshold=None, surrounding=2):
         if threshold==None: threshold = 5000 / (self.chunk_count/100)
         """Removes notes that are shorter than 0.05 seconds (1200 beats per minutes, 20 beats per second)"""

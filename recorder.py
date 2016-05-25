@@ -14,6 +14,7 @@ RATE = 44100
 CHUNK = 1024
 
 def record(time, filename):
+    """Records audio and writes to a file"""
     # open a pyaudio stream for recording
     audio = pyaudio.PyAudio()
     stream = audio.open(format=FORMAT, channels=CHANNELS,
