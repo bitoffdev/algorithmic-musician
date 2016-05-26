@@ -5,7 +5,7 @@ Copyright EJM Software 2016
 Usage: python server.py
 """
 from BaseHTTPServer import HTTPServer, BaseHTTPRequestHandler
-import cgi, pickle, os, generator, waveform, base64, StringIO
+import cgi, pickle, os, generator, waveform, base64, StringIO, sys
 
 PORT_NUMBER = 8080
 
@@ -31,13 +31,18 @@ class StoreHandler(BaseHTTPRequestHandler):
             f = form['file'].file
             f.seek(0, 2)
             if f.tell() > 0:
+                print "Success: A valid input file was received."
                 f.seek(0,0)
                 g.add_wave(f)
+            else:
+                print "Warning: No valid file was received."
             # dump the data into a pickle file
             pickle.dump(g.pattern_dictionary, open("pattern-data.pickle", "wb"))
             # build an output song
+            print "Loaded Pattern Dictionary. Generating Song"
             output = StringIO.StringIO()
             waveform.to_file(output, waveform.from_string(str(g.run())))
+            print "Song Finished"
             # send header and body encoded in base64, which is what the web app
             # is using
             self.send_response(200)
@@ -45,7 +50,8 @@ class StoreHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(base64.b64encode(output.getvalue()))
         except:
-            pass
+            print "Unexpected error:", sys.exc_info()[0]
+            raise
 
     def do_GET(self):
         """Send the html web app to the client"""

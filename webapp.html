@@ -96,8 +96,9 @@
     } else {
       var filesString = "";
       for (var i=0;i<f.files.length;i++){
-        document.getElementById("fileInfo").innerHTML += f.files[i].name + "  ";
+        filesString += f.files[i].name + "  ";
       }
+      document.getElementById("fileInfo").innerHTML = filesString;
     }
   }
 

@@ -4,7 +4,7 @@ Copyright EJM Software 2016
 """
 import numpy as np
 
-SEARCH_DEPTH = 3
+SEARCH_DEPTH = 4
 
 class Pattern(object):
     """Represents possibilities for a note at the given frequency."""
@@ -29,12 +29,18 @@ class PatternDictionary(object):
     def find_frequency(self, frequency):
         """Returns a Pattern object with the given frequency
         Note: Just find a frequency that is off by a factor of the twelth root of two"""
+        # return early if the frequency is 0. Otherwise, the subsequent code
+        # would raise a ZeroDivisionError
+        if frequency==0:
+            return 0
+        # Iterate through all of the Patterns already in the pattern dictionary
+        # and check if any of the pattern's frequencies are within half of one
+        # chromatic step from the given frequency.
         for i in xrange(len(self.patterns)):
-            # if self.patterns[i].frequency == frequency:
-            #     return i
             ratio = self.patterns[i].frequency / frequency
             if ratio < 1.059463 and ratio > 0.94387:
                 return i
+        # If no note was found with the given frequency, just return -1.
         return -1
     def add_pattern(self, _freq):
         """Adds a new Pattern object to the dictionary"""
@@ -62,15 +68,14 @@ class PatternDictionary(object):
                         ranges[len(ranges)-1].append(freq)
                     else:
                         ranges.append([freq])
-            # Find the max value in each chunk and interpolate it
 
+            # Find the max value in each chunk and interpolate it
             for i in range(len(ranges)):
                 if len(ranges[i]) >= 3:
                     amp_range = stft.amplitudes[time][ranges[i][0]:ranges[i][len(ranges[i])-1]]
                     f_index = np.argmax(amp_range) + ranges[i][0]
                     f = stft.frequencies[f_index]
                     amp = stft.amplitudes[time][f_index]
-
                     # Get the pattern's identifier
                     pattern_id = self.find_frequency(f)
                     # Check if the pattern was played in the last frame

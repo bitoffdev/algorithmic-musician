@@ -33,14 +33,22 @@ class Generator(object):
     def run(self):
         """Generate a song using the PatternDictionary"""
         song = songsmith.Phrase()
+        # Check to be sure that there are patterns
+        if len(self.pattern_dictionary.patterns) == 0:
+            print "Error: There are no patterns to generate the music with!"
+            return song
         # Add blank note to start
         song.chords.append(songsmith.Chord(notes=[songsmith.Note(0, 0, 0)]))
         pattern_choices = [0]
         for t in range(1, 200):
             # Determine all the possible next notes
-            choices = []
+            possibilities = []
             for depth in range(min(len(pattern_choices), patterns.SEARCH_DEPTH)):
-                choices.extend(self.pattern_dictionary.patterns[pattern_choices[t-1-depth]].subsequent_ids[depth])
+                possibilities.append(self.pattern_dictionary.patterns[pattern_choices[t-1-depth]].subsequent_ids[depth])
+            # choices = filter(lambda x: all((x in l) for l in possibilities), range(len(self.pattern_dictionary.patterns)))
+            choices = filter(lambda x: all((x in l) for l in possibilities), possibilities[0])
+            if len(choices)==0:
+                choices = [0]
             # Randomly pick a note from the next possible notes
             next_id = 0 if len(choices)==0 else random.choice(choices)
             next_freq = self.pattern_dictionary.patterns[next_id].frequency
@@ -51,6 +59,9 @@ class Generator(object):
             song.chords.append(songsmith.Chord(notes=[songsmith.Note(next_freq, next_dur, 16000)]))
             # Add the new note to the array of all the generated notes
             pattern_choices.append(next_id)
+        # add overtones to the music
+        song.addovertones(2)
+        # return the generated song
         return song
 
 if __name__=="__main__":
