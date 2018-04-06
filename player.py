@@ -4,7 +4,8 @@ Copyright EJM Software 2016
 
 Usage: python waveform-player.py FILENAME [START] [END] [SPEED]
 """
-import sys, pyaudio, waveform
+import pyaudio, waveform
+from sys import argv
 
 def play(wav, _start=None, _end=None, _speed=None):
     # Get the samples from the waveform object
@@ -28,7 +29,7 @@ def play(wav, _start=None, _end=None, _speed=None):
     p.terminate()
 
 if __name__=="__main__":
-    if len(sys.argv) > 1:
+    if len(argv) > 1:
         wav = waveform.open_wave(argv[1])
         play(wav, argv[2] if len(argv)>2 else None, argv[3] if len(argv)>3 else None, argv[4] if len(argv)>4 else None)
     else:
