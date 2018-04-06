@@ -6,3 +6,6 @@
 
 # Ignore waveform files
 *.wav
+
+# Ignore pattern database
+pattern-data.pickle
