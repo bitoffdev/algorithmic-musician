@@ -1,6 +1,6 @@
 """
 fourier.py - Runs the fourier transform
-Copyright EJM Software 2016
+:author: Elliot Miller
 """
 import math
 

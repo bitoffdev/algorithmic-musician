@@ -1,6 +1,6 @@
 """
 waveform-test.py - tests the waveform class
-Copyright EJM Software 2016
+:author: Elliot Miller
 
 Usage: python waveform-test.py PATH
 """

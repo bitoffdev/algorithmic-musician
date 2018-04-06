@@ -1,7 +1,7 @@
 """
 songsmith.py - A module for constucting a 16-bit audio waveform from an
 intuitive musical structue.
-Copyright EJM Software 2016
+:author: Elliot Miller
 """
 from numpy import linspace,sin,int16,concatenate, fromfunction
 import sys, math

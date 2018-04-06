@@ -1,6 +1,6 @@
 """
 player.py - A module for playing a waveform using PyAudio
-Copyright EJM Software 2016
+:author: Elliot Miller
 
 Usage: python waveform-player.py FILENAME [START] [END] [SPEED]
 """

@@ -1,6 +1,6 @@
 """
 server.py - The main program for running a web interface in this project
-Copyright EJM Software 2016
+:author: Elliot Miller
 
 Usage: python generator.py [FILE 1] [FILE 2] ... [FILE N]
 """

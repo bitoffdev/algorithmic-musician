@@ -1,7 +1,7 @@
 algorithmic-musician
 =====
 
-Copyright EJM Software 2016
+Senior Project, Elliot Miller, 2016
 
 # Quick-Start Guide
 

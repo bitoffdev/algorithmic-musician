@@ -1,6 +1,6 @@
 """
 songsmith-test.py - tests the songsmith class
-Copyright EJM Software 2016
+:author: Elliot Miller
 
 Usage: python songsmith-test.py
 """

@@ -1,6 +1,6 @@
 """
 main.py - a file for generating new music
-Copyright EJM Software 2016
+:author: Elliot Miller
 
 This file has been deprecated. Use generator.py instead.
 """

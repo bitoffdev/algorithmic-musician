@@ -1,6 +1,6 @@
 """
 stft.py - A module for analyzing waveform audio files
-Copyright EJM Software 2016
+:author: Elliot Miller
 
 Usage: python stft.py FILENAME
 """

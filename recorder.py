@@ -1,6 +1,6 @@
 """
 recorder.py - A module for recording waveform files
-Copyright EJM Software 2016
+:author: Elliot Miller
 
 Usage: python recorder.py FILENAME [LENGTH]
     FILENAME -- the path to write the new file to

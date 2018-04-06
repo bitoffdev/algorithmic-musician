@@ -1,6 +1,6 @@
 """
 patterns.py - A module for creating a dictionary of patterns found in music
-Copyright EJM Software 2016
+:author: Elliot Miller
 """
 import numpy as np
 

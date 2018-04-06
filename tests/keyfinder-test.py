@@ -1,6 +1,6 @@
 """
 keyfinder-test.py - tests the keyfinder class
-Copyright EJM Software 2016
+:author: Elliot Miller
 
 Usage: python keyfinder-test.py
 """

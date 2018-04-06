@@ -1,6 +1,6 @@
 """
 keyfinder.py - A module for determining the key of a musical composition
-Copyright EJM Software 2016
+:author: Elliot Miller
 """
 from math import log
 
