@@ -11,6 +11,14 @@ be run in this project:
 1. Command line interface
 2. Web server interface
 
+# Setup
+
+Make sure Python 2.7 is installed along with tkinter, matplotlib, and pyaudio.
+On a debian-based system you can install all the requirements with:
+
+    [sudo] apt install python2.7 python-tk python-pip python-pyaudio
+    [sudo] pip install matplotlib
+
 # Command line interface
 
 From the root directory of this project, run the command,
@@ -19,6 +27,10 @@ From the root directory of this project, run the command,
 
 Where `filename` is the path to the waveform file you want the program to
 analyze and generate music from.
+
+To play a wavefile you can use the `player.py` program:
+
+    python player.py filename.wav
 
 # Web interface
 
